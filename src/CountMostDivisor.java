@@ -79,7 +79,6 @@ public class CountMostDivisor {
 
         int remain = (UPPER_LIMIT - 1) - numPerThread * nThread;
 
-        long startTime = System.currentTimeMillis();
 
         Thread[] threads;
 
@@ -95,6 +94,8 @@ public class CountMostDivisor {
             threads[i - 1] = new Worker(lo, lo + numPerThread - 1);
             lo += numPerThread;
         }
+
+        long startTime = System.currentTimeMillis();
 
         for (Thread t : threads) {
             t.start();
