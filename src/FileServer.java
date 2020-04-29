@@ -28,7 +28,7 @@ import java.util.concurrent.BlockingQueue;
  * text files, but this is not checked.  Also, the server
  * must have permission to read all the files.
  */
-public class FileServer implements Runnable {
+public class FileServer implements Runnable, AutoCloseable {
 
     private static final int LISTENING_PORT = 3210;
 
@@ -42,6 +42,9 @@ public class FileServer implements Runnable {
     private final BlockingQueue<Socket> waitingConn;
     private final File directory;
 
+    private ServerSocket listener;
+
+
     public FileServer(File directory) {
         this.directory = directory;
         waitingConn = new ArrayBlockingQueue<>(CONNECTION_QUEUE_SIZE);
@@ -50,7 +53,7 @@ public class FileServer implements Runnable {
 
     @Override
     public void run() {
-        ServerSocket listener; // Listens for connection requests.
+
 
         Socket connection;     // A socket for communicating with a client.
 
@@ -77,6 +80,13 @@ public class FileServer implements Runnable {
             System.err.println("Server shut down unexpectedly.");
             System.err.println("Error:  " + e);
             running = false;
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (listener != null && !listener.isClosed()) {
+            listener.close();
         }
     }
 
@@ -211,12 +221,15 @@ public class FileServer implements Runnable {
             return;
         }
 
-        FileServer server = new FileServer(directory);
+        try (FileServer server = new FileServer(directory)) {
+            server.run();
+        } catch (IOException e) {
+            System.err.println("Server error " + e.toString());
+        }
 
-        server.run();
+
+    }
 
 
-    } // end main()
 
-
-} //end class FileServer
+}
